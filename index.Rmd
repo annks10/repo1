@@ -1,0 +1,75 @@
+---
+title: "Bivariate Data"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+CLEAN WORKSPACE
+```{r}
+rm(list=ls())
+```
+
+DATA
+
+```{r}
+
+library(rio)
+costs_regions= read.csv("https://github.com/annks10/repo1/raw/main/costs_regions.csv", stringsAsFactors = FALSE)
+str(costs_regions)
+```
+
+SUBSET DATA
+
+```{r}
+selec=c("Region","Division","MedianHomePrice","MedianEarnings","AverageEarnings","PovertyRate","Population","PopulationUnderPovertyLine")
+costs_regions1=costs_regions[,selec]
+```
+
+REORDERING DATA
+
+```{r}
+print(costs_regions1[order(costs_regions1$MedianHomePrice, decreasing = TRUE), ])  # Order data descending
+costs_regions1_reorder=costs_regions1[order(costs_regions1$MedianHomePrice, decreasing = TRUE), ]
+row.names(costs_regions1_reorder)=NULL
+str(costs_regions1_reorder)
+```
+
+CONVERTING CHARACTER VALUES TO NUMERIC 
+
+```{r}
+##remove dollar signs and commas from individual columns
+costs_regions1_reorder$MedianHomePrice = as.numeric(gsub("[\\$,]", "", costs_regions1_reorder$MedianHomePrice))
+
+costs_regions1_reorder$MedianEarnings = as.numeric(gsub("[\\$,]", "", costs_regions1_reorder$MedianEarnings))
+costs_regions1_reorder$AverageEarnings = as.numeric(gsub("[\\$,]", "", costs_regions1_reorder$AverageEarnings))
+
+costs_regions1_reorder$PovertyRate=as.numeric(gsub("[\\%,]", "", costs_regions1_reorder$PovertyRate))
+str(costs_regions1_reorder)
+set.seed(10)
+```
+
+GGPLOT
+
+```{r}
+library(ggplot2)
+library(scales)
+
+base=ggplot(data=costs_regions1_reorder,
+            aes(x=reorder(Region, -MedianHomePrice),
+                y=MedianHomePrice,
+                fill=Division))+theme_minimal()
+base
+plot1=base+geom_bar(stat = "identity",
+                    position="dodge")
+plot1
+plot2=plot1+ labs(x = "Region",
+       y = "Median home price (000s)",
+       title = "The most expensive places to buy a home in the US",
+       caption = "Data source: Wikipedia") 
+plot3=plot2+theme_bw() 
+plot3+scale_y_continuous(labels = label_number(suffix = "K", scale = 1e-5)) 
+
+```
